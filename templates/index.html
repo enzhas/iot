@@ -4,9 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESP32-CAM Face Recognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        h2 {
+            margin: 20px 0 10px;
+            font-size: 1.8rem;
+        }
+        .live-stream {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .live-stream img {
+            border-radius: 10px;
+            border: 4px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 60%;
+            height: auto;
+        }
+        .faces-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .faces-container img {
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            max-width: 150px;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
+        .faces-container img:hover {
+            transform: scale(1.1);
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        button:active {
+            background-color: #3e8e41;
+            transform: translateY(0);
+        }
+        footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-    <h1>ESP32-CAM Face Recognition</h1>
-    <img src="/video_feed" width="720" />
+    <header>
+        <h1>ESP32-CAM Face Recognition</h1>
+    </header>
+
+    <h2>Live Stream</h2>
+    <div class="live-stream">
+        <img src="/video_feed" alt="Live Stream" />
+    </div>
+    <button onclick="saveFace()">Save Current Face</button>
+    <h2>Detected Faces</h2>
+    <div class="faces-container">
+        <!-- Detected faces will be dynamically loaded here -->
+    </div>
+
+
+    <footer>
+        <p>&copy; 2024 ESP32-CAM Project | Designed for seamless face recognition</p>
+    </footer>
+
+    <script>
+        async function loadDetectedFaces() {
+        try {
+            const response = await fetch('/detected_faces');
+            const faces = await response.json();
+            const container = document.querySelector('.faces-container');
+            container.innerHTML = ''; // Clear existing images
+            faces.forEach(face => {
+                const img = document.createElement('img');
+                // Update the source to fetch images from the backend
+                img.src = `http://192.168.58.120:5001/static/detected_faces/${face}`;
+                img.alt = face;
+                container.appendChild(img);
+            });
+        } catch (error) {
+            console.error('Error loading detected faces:', error);
+        }
+    }
+
+        // Reload detected faces every 5 seconds
+        setInterval(loadDetectedFaces, 5000);
+        loadDetectedFaces(); // Initial load
+
+        async function saveFace() {
+            try {
+                const response = await fetch('/save_face', { method: 'POST' });
+                const result = await response.text();
+                alert(result);
+            } catch (error) {
+                alert('Error saving face. Please try again.');
+            }
+        }
+    </script>
 </body>
 </html>
